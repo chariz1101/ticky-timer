@@ -230,3 +230,49 @@
     animation: none;
   }
 }
+/* --- Mode switch --- */
+
+.ticky-mode-switch {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--ticky-panel);
+  border: 1px solid #2a2d33;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.ticky-mode-btn {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ticky-muted);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ticky-mode-btn:hover:not(:disabled) {
+  color: var(--ticky-ivory);
+}
+
+.ticky-mode-btn:focus-visible {
+  outline: 2px solid var(--ticky-brass);
+  outline-offset: 2px;
+}
+
+.ticky-mode-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.ticky-mode-btn--active {
+  background: rgba(200, 162, 74, 0.14);
+  color: var(--ticky-brass);
+  box-shadow: inset 0 0 0 1px rgba(200, 162, 74, 0.35);
+}
