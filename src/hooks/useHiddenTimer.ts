@@ -48,6 +48,10 @@ export function useHiddenTimer(): HiddenTimerState {
 
   const toggleRunning = useCallback(() => {
     if (runStartRef.current === null) {
+      if (modeRef.current === "auto") {
+        // Each run in auto mode starts from zero — no manual reset needed.
+        accumulatedMsRef.current = 0;
+      }
       runStartRef.current = performance.now();
       setRunning(true);
       if (modeRef.current === "auto") setRevealed(false);
@@ -63,9 +67,6 @@ export function useHiddenTimer(): HiddenTimerState {
     accumulatedMsRef.current = 0;
     if (runStartRef.current !== null) {
       runStartRef.current = performance.now();
-    } else if (modeRef.current === "auto") {
-      // Back to an "armed" state — nothing worth showing yet.
-      setRevealed(false);
     }
     forceRender((n) => n + 1);
   }, []);
