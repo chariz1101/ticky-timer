@@ -1,0 +1,232 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500&display=swap");
+
+:root {
+  --ticky-bg: #16171b;
+  --ticky-panel: #1f2126;
+  --ticky-brass: #c8a24a;
+  --ticky-brass-dim: #6f5c2e;
+  --ticky-ivory: #eee6d5;
+  --ticky-muted: #8b8d93;
+  --ticky-rust: #b5533c;
+}
+
+.ticky-stage {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: radial-gradient(circle at 50% 35%, #1c1e23 0%, var(--ticky-bg) 70%);
+  color: var(--ticky-ivory);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.ticky-eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  letter-spacing: 0.35em;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--ticky-brass-dim);
+}
+
+/* --- Dial --- */
+
+.ticky-dial {
+  position: relative;
+  width: min(72vw, 300px);
+  height: min(72vw, 300px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ticky-bezel {
+  position: absolute;
+  inset: 0;
+}
+
+.ticky-bezel-tick {
+  position: absolute;
+  inset: 0;
+  /* rotated around the box's own center, which always equals the dial's
+     center regardless of viewport size — no fixed-pixel origin needed */
+}
+
+.ticky-bezel-tick::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 8px;
+  margin-left: -1px;
+  background: var(--ticky-brass-dim);
+  transition: background 0.6s ease;
+}
+
+.ticky-bezel-tick--major::before {
+  height: 14px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--ticky-brass);
+}
+
+.ticky-dial--running .ticky-bezel-tick {
+  animation: ticky-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes ticky-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.ticky-face {
+  position: relative;
+  width: 82%;
+  height: 82%;
+  border-radius: 50%;
+  background: var(--ticky-panel);
+  border: 1px solid #2a2d33;
+  box-shadow:
+    inset 0 0 0 1px rgba(200, 162, 74, 0.08),
+    inset 0 2px 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.ticky-dial--running .ticky-face {
+  animation: ticky-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes ticky-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(200, 162, 74, 0.08),
+      inset 0 2px 20px rgba(0, 0, 0, 0.5),
+      0 0 0 rgba(200, 162, 74, 0);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(200, 162, 74, 0.18),
+      inset 0 2px 20px rgba(0, 0, 0, 0.5),
+      0 0 24px rgba(200, 162, 74, 0.12);
+  }
+}
+
+/* --- Readout --- */
+
+.ticky-readout {
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(1.6rem, 8vw, 2.4rem);
+  font-weight: 500;
+  color: var(--ticky-ivory);
+  letter-spacing: 0.02em;
+  filter: blur(0);
+  transition: filter 0.35s ease, opacity 0.35s ease;
+}
+
+.ticky-mask {
+  color: var(--ticky-brass-dim);
+  letter-spacing: 0.3em;
+}
+
+.ticky-colon {
+  color: var(--ticky-brass);
+  margin: 0 0.05em;
+}
+
+.ticky-centis {
+  font-size: 0.55em;
+  color: var(--ticky-muted);
+  margin-left: 0.15em;
+}
+
+.ticky-status {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ticky-muted);
+}
+
+/* --- Hint & controls --- */
+
+.ticky-hint {
+  font-size: 0.85rem;
+  color: var(--ticky-muted);
+  margin: 0;
+}
+
+.ticky-hint kbd {
+  font-family: "JetBrains Mono", monospace;
+  background: var(--ticky-panel);
+  border: 1px solid var(--ticky-brass-dim);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  color: var(--ticky-brass);
+  font-size: 0.8em;
+}
+
+.ticky-controls {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.ticky-btn {
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  background: transparent;
+}
+
+.ticky-btn:active {
+  transform: scale(0.96);
+}
+
+.ticky-btn:focus-visible {
+  outline: 2px solid var(--ticky-brass);
+  outline-offset: 2px;
+}
+
+.ticky-btn--reset {
+  border-color: var(--ticky-rust);
+  color: var(--ticky-rust);
+}
+
+.ticky-btn--reset:hover {
+  background: rgba(181, 83, 60, 0.12);
+}
+
+.ticky-btn--reveal {
+  border-color: var(--ticky-brass);
+  color: var(--ticky-brass);
+}
+
+.ticky-btn--reveal:hover {
+  background: rgba(200, 162, 74, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticky-dial--running .ticky-bezel-tick,
+  .ticky-dial--running .ticky-face {
+    animation: none;
+  }
+}
