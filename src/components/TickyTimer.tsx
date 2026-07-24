@@ -17,7 +17,7 @@ function formatElapsed(ms: number): { mm: string; ss: string; cc: string } {
 const BEZEL_TICKS = 60;
 
 export default function TickyTimer() {
-  const { elapsedMs, running, revealed, reset, toggleRevealed } = useHiddenTimer();
+  const { elapsedMs, running, revealed, mode, reset, toggleRevealed, setMode } = useHiddenTimer();
 
   const { mm, ss, cc } = useMemo(() => formatElapsed(elapsedMs), [elapsedMs]);
 
@@ -43,6 +43,25 @@ export default function TickyTimer() {
     <div className="ticky-stage">
       <div className="ticky-eyebrow">ticky&nbsp;timer</div>
 
+      <div className="ticky-mode-switch" role="group" aria-label="Reveal mode">
+        <button
+          type="button"
+          className={`ticky-mode-btn${mode === "auto" ? " ticky-mode-btn--active" : ""}`}
+          onClick={() => setMode("auto")}
+          disabled={running}
+        >
+          Auto
+        </button>
+        <button
+          type="button"
+          className={`ticky-mode-btn${mode === "manual" ? " ticky-mode-btn--active" : ""}`}
+          onClick={() => setMode("manual")}
+          disabled={running}
+        >
+          Manual
+        </button>
+      </div>
+
       <div className={`ticky-dial${running ? " ticky-dial--running" : ""}`}>
         <div className="ticky-bezel">{ticks}</div>
 
@@ -65,15 +84,18 @@ export default function TickyTimer() {
 
       <p className="ticky-hint">
         Press <kbd>Space</kbd> to {running ? "stop" : "start"}
+        {mode === "auto" ? " · hides on start, reveals on stop" : ""}
       </p>
 
       <div className="ticky-controls">
         <button type="button" className="ticky-btn ticky-btn--reset" onClick={reset}>
           Reset
         </button>
-        <button type="button" className="ticky-btn ticky-btn--reveal" onClick={toggleRevealed}>
-          {revealed ? "Hide" : "Reveal"}
-        </button>
+        {mode === "manual" && (
+          <button type="button" className="ticky-btn ticky-btn--reveal" onClick={toggleRevealed}>
+            {revealed ? "Hide" : "Reveal"}
+          </button>
+        )}
       </div>
     </div>
   );
