@@ -88,9 +88,11 @@ export default function TickyTimer() {
       </p>
 
       <div className="ticky-controls">
-        <button type="button" className="ticky-btn ticky-btn--reset" onClick={reset}>
-          Reset
-        </button>
+        {mode === "manual" && (
+          <button type="button" className="ticky-btn ticky-btn--reset" onClick={reset}>
+            Reset
+          </button>
+        )}
         {mode === "manual" && (
           <button type="button" className="ticky-btn ticky-btn--reveal" onClick={toggleRevealed}>
             {revealed ? "Hide" : "Reveal"}
