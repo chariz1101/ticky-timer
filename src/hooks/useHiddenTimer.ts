@@ -1,15 +1,48 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Plays a short, soft blip through the Web Audio API — no audio file needed.
- * A tiny gain envelope (fade in/out) avoids the clicky "pop" a raw square
- * wave start/stop would otherwise produce.
+ * Sustained, high-pitched buzzer for the start of a run — like a basketball
+ * shot-clock horn. Two slightly-detuned oscillators (sawtooth + square)
+ * layered together give it that harsh, buzzy texture instead of a clean tone.
  */
-function playBeep(ctx: AudioContext, frequency: number) {
+function playStartBuzzer(ctx: AudioContext) {
+  const duration = 0.55;
+  const now = ctx.currentTime;
+
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc1.type = "sawtooth";
+  osc2.type = "square";
+  osc1.frequency.value = 1046; // C6 — high and piercing
+  osc2.frequency.value = 1052; // slightly detuned from osc1 for the "buzz" beat
+
+  // Quick attack, sustained buzz, short release at the very end.
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.14, now + 0.015);
+  gain.gain.setValueAtTime(0.14, now + duration - 0.04);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + duration);
+  osc2.stop(now + duration);
+}
+
+/**
+ * Short, soft chirp for the end of a run — a quick single blip, clearly
+ * distinct from the long start buzzer.
+ */
+function playStopChirp(ctx: AudioContext) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = "sine";
-  osc.frequency.value = frequency;
+  osc.frequency.value = 587;
 
   const now = ctx.currentTime;
   gain.gain.setValueAtTime(0, now);
@@ -91,14 +124,14 @@ export function useHiddenTimer(): HiddenTimerState {
       runStartRef.current = performance.now();
       setRunning(true);
       if (modeRef.current === "auto") setRevealed(false);
-      playBeep(getAudioCtx(), 880); // higher blip = go
+      playStartBuzzer(getAudioCtx());
     } else {
       // stopping
       accumulatedMsRef.current += performance.now() - runStartRef.current;
       runStartRef.current = null;
       setRunning(false);
       if (modeRef.current === "auto") setRevealed(true);
-      playBeep(getAudioCtx(), 587); // lower blip = stop
+      playStopChirp(getAudioCtx());
     }
   }, [getAudioCtx]);
 
