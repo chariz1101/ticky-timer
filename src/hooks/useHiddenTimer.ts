@@ -1,5 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+/**
+ * Plays a short, soft blip through the Web Audio API — no audio file needed.
+ * A tiny gain envelope (fade in/out) avoids the clicky "pop" a raw square
+ * wave start/stop would otherwise produce.
+ */
+function playBeep(ctx: AudioContext, frequency: number) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.value = frequency;
+
+  const now = ctx.currentTime;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.15, now + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.1);
+}
+
 export type TimerMode = "auto" | "manual";
 
 export interface HiddenTimerState {
@@ -24,7 +45,8 @@ export interface HiddenTimerState {
  * Two reveal modes:
  *  - "auto":   revealed is driven entirely by run state. Starting the
  *              timer hides it, stopping it reveals it. Manual toggling
- *              is disabled.
+ *              is disabled. Each run also starts from zero automatically,
+ *              so there's no need for a Reset button in this mode.
  *  - "manual": revealed is fully user-controlled via toggleRevealed,
  *              independent of running state (original behavior).
  */
@@ -39,6 +61,19 @@ export function useHiddenTimer(): HiddenTimerState {
   const intervalRef = useRef<number | null>(null);
   const modeRef = useRef(mode);
   modeRef.current = mode;
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Created lazily, on the first spacebar press, so it's tied to a real user
+  // gesture (browsers block audio that starts without one).
+  const getAudioCtx = useCallback(() => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new AudioContext();
+    }
+    if (audioCtxRef.current.state === "suspended") {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  }, []);
 
   const getElapsedMs = useCallback(() => {
     const running = runStartRef.current !== null;
@@ -48,6 +83,7 @@ export function useHiddenTimer(): HiddenTimerState {
 
   const toggleRunning = useCallback(() => {
     if (runStartRef.current === null) {
+      // starting
       if (modeRef.current === "auto") {
         // Each run in auto mode starts from zero — no manual reset needed.
         accumulatedMsRef.current = 0;
@@ -55,13 +91,16 @@ export function useHiddenTimer(): HiddenTimerState {
       runStartRef.current = performance.now();
       setRunning(true);
       if (modeRef.current === "auto") setRevealed(false);
+      playBeep(getAudioCtx(), 880); // higher blip = go
     } else {
+      // stopping
       accumulatedMsRef.current += performance.now() - runStartRef.current;
       runStartRef.current = null;
       setRunning(false);
       if (modeRef.current === "auto") setRevealed(true);
+      playBeep(getAudioCtx(), 587); // lower blip = stop
     }
-  }, []);
+  }, [getAudioCtx]);
 
   const reset = useCallback(() => {
     accumulatedMsRef.current = 0;
@@ -79,12 +118,16 @@ export function useHiddenTimer(): HiddenTimerState {
   }, []);
 
   const setMode = useCallback((next: TimerMode) => {
+    // Switching modes mid-run (or with leftover time sitting around) would
+    // leave an ambiguous state — e.g. stale elapsed time from a manual
+    // session suddenly showing up "revealed" the moment you flip to auto,
+    // with no Reset button visible in auto mode to clear it. So changing
+    // modes always starts a clean slate: zeroed, stopped, hidden.
+    accumulatedMsRef.current = 0;
+    runStartRef.current = null;
+    setRunning(false);
+    setRevealed(false);
     setModeState(next);
-    if (next === "auto") {
-      // Sync reveal state to whatever it "should" be right now:
-      // hidden while running, shown while stopped.
-      setRevealed(runStartRef.current === null);
-    }
   }, []);
 
   const toggleMode = useCallback(() => {
@@ -103,6 +146,13 @@ export function useHiddenTimer(): HiddenTimerState {
     }
     return undefined;
   }, [revealed, running]);
+
+  // Release the audio device when the component goes away.
+  useEffect(() => {
+    return () => {
+      audioCtxRef.current?.close();
+    };
+  }, []);
 
   // Spacebar starts/stops the timer, but never while focus is on a button
   // (so Reset / Reveal / Mode keep their own Enter/Space behavior without double-firing).
